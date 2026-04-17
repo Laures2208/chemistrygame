@@ -1,0 +1,57 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    // Collection: leaderboard
+    // Document ID: auto-generated
+    // Fields:
+    //   - playerName: string (required, max 50 chars)
+    //   - completionTime: number (required, must be > 0)
+    //   - accuracy: number (required, 0-100)
+    //   - createdAt: timestamp (required)
+    //   - userId: string (required, must match request.auth.uid)
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+       return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+       return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+    
+    function hasRequiredFields(fields) {
+       return request.resource.data.keys().hasAll(fields);
+    }
+
+    function isValidLeaderboardEntry(data) {
+      return hasOnlyAllowedFields(['playerName', 'completionTime', 'accuracy', 'createdAt', 'userId']) &&
+             hasRequiredFields(['playerName', 'completionTime', 'accuracy', 'createdAt', 'userId']) &&
+             data.playerName is string && data.playerName.size() > 0 && data.playerName.size() <= 50 &&
+             data.completionTime is number && data.completionTime > 0 &&
+             data.accuracy is number && data.accuracy >= 0 && data.accuracy <= 100 &&
+             data.createdAt is timestamp &&
+             data.userId is string;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /leaderboard/{entryId} {
+      allow read: if true;
+      // Allow creation if data is valid (no auth required for demo)
+      allow create: if isValidLeaderboardEntry(request.resource.data);
+      // Scores are immutable, no updates or deletes allowed
+      allow update, delete: if false;
+    }
+  }
+}

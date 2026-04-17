@@ -1,0 +1,40 @@
+{
+  "entities": {
+    "LeaderboardEntry": {
+      "title": "LeaderboardEntry",
+      "description": "Represents a player's score and completion time",
+      "type": "object",
+      "properties": {
+        "playerName": {
+          "type": "string",
+          "description": "Name of the player"
+        },
+        "completionTime": {
+          "type": "number",
+          "description": "Time taken to complete the game in seconds"
+        },
+        "accuracy": {
+          "type": "number",
+          "description": "Percentage of accuracy during the game"
+        },
+        "createdAt": {
+          "type": "timestamp",
+          "description": "Time the score was submitted"
+        },
+        "userId": {
+          "type": "string",
+          "description": "ID of the user who submitted the score"
+        }
+      },
+      "required": ["playerName", "completionTime", "accuracy", "createdAt", "userId"]
+    }
+  },
+  "firestore": {
+    "/leaderboard/{entryId}": {
+      "schema": {
+        "$ref": "#/entities/LeaderboardEntry"
+      },
+      "description": "Collection storing leaderboard scores"
+    }
+  }
+}
